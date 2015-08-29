@@ -7,11 +7,13 @@ public class EditorScript_MakePrefab : MonoBehaviour {
 	public static void MakePrefab()
 	{
 		GameObject[] selectedObjects = Selection.gameObjects;
-
+        System.Media.SoundPlayer player = new System.Media.SoundPlayer(Application.dataPath + @"\Editor\Jump.wav");
+        player.Play();
 		foreach(GameObject go in selectedObjects)
 		{
 			string name = go.name;
 			string assetPath = "Assets/" + name + ".prefab";
+            
 
 			if(AssetDatabase.LoadAssetAtPath (assetPath, typeof(GameObject)))
 			{
