@@ -16,20 +16,17 @@ public class MakePrefabs : MonoBehaviour {
 
 			if (AssetDatabase.LoadAssetAtPath(assetPath, typeof(GameObject)))
 			{
-				Debug.Log("Asset exists!");
+//				Debug.Log("Asset exists!");
 				if (EditorUtility.DisplayDialog("Caution", "Prefab already exists.  " +
 				                                "Do you want to overwrite?", "Yes", "No"))
 				{
 					CreateNew(go, assetPath);
-//					Debug.Log("overwriting!");
 				}
 			}
 			else
 			{
 				CreateNew(go, assetPath);
-//				Debug.Log("Asset does not exist!");
 			}
-//			Debug.Log("Name: " + go.name + " Path: " + assetPath);
 		}
 	} // end method CreatePrefab
 
@@ -41,15 +38,5 @@ public class MakePrefabs : MonoBehaviour {
 
 		DestroyImmediate(obj);
 		GameObject clone = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
-	}
-
-	// Use this for initialization
-//	void Start () {
-//	
-//	}
-	
-	// Update is called once per frame
-//	void Update () {
-//	
-//	}
+	} // end method CreateNew
 } // end class MakePrefabs
