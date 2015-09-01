@@ -135,17 +135,78 @@ public class MakeAnimations : EditorWindow {
 		// Extract the sprites
 		Object[] sprites = AssetDatabase.LoadAllAssetsAtPath(path);
 
-		// The following line needs to be deleted or changed:
-		return new AnimationClip();
-	}
+		// Determine how many frames, and the length of each frame
+		int frameCount = endFrame - startFrame + 1;
+		float frameLength = 1f / timeBetween;
 
-	// Use this for initialization
-//	void Start () {
-//	
-//	}
-	
-	// Update is called once per frame
-//	void Update () {
-//	
-//	}
-}
+		// Create a new (empty) animation clip
+		AnimationClip clip = new AnimationClip();
+
+		// Set the framerate for the clip
+		clip.frameRate = frameRate;
+
+		// Create the new (empty) curve binding
+		EditorCurveBinding curveBinding = new EditorCurveBinding();
+		// Assign it to change the sprite renderer
+		curveBinding.type = typeof(SpriteRenderer);
+		// Assign it to alter the sprite of the sprite renderer
+		curveBinding.propertyName = "m_Sprite";
+
+		// Create a container for all of the keyframes
+		ObjectReferenceKeyframe[] keyFrames;
+
+		// Determine how many frames there will be if we are or are not pingponging
+		if (!pingPong)
+			keyFrames = new ObjectReferenceKeyframe[frameCount + 1];
+		else
+			keyFrames = new ObjectReferenceKeyframe[frameCount * 2 + 1];
+
+		// Keep track of what frame number we are on
+		int frameNumber = 0;
+
+		// Loop from start to end, incrementing frameNumber as we go
+		for (int i = startFrame; i < endFrame + 1; i++, frameNumber++)
+		{
+			// Create an empty keyframe
+			ObjectReferenceKeyframe tempKeyFrame = new ObjectReferenceKeyframe();
+			// Assign it a time to appear in the animation
+			tempKeyFrame.time = frameNumber * frameLength;
+			// Assign it to a sprite
+			tempKeyFrame.value = sprites[i];
+			// Place it into the container for all the keyframes
+			keyFrames[frameNumber] = tempKeyFrame;
+		}
+
+		// If we are pingponging this animation
+		if (pingPong)
+		{
+			// Create keyframes starting at the end and going backwards
+			// Continue to keep track of the frame number
+			for (int i = endFrame; i >= startFrame; i--, frameNumber++)
+			{
+				ObjectReferenceKeyframe tempKeyFrame = new ObjectReferenceKeyframe();
+				tempKeyFrame.time = frameNumber * frameLength;
+				tempKeyFrame.value = sprites[i];
+				keyFrames[frameNumber] = tempKeyFrame;
+			}
+		}
+
+		// Create the last sprite to stop it from switching quickly from the last frame to the first one
+		ObjectReferenceKeyframe lastSprite = new ObjectReferenceKeyframe();
+		lastSprite.time = frameNumber * frameLength;
+		lastSprite.value = sprites[startFrame];
+		keyFrames[frameNumber] = lastSprite;
+
+		// Assign the name
+		clip.name = clipName;
+
+		// Apply the curve
+		AnimationUtility.SetObjectReferenceCurve(clip, curveBinding, keyFrames);
+
+		// Create the clip
+		AssetDatabase.CreateAsset(clip, ("Assets/" + clipName + ".anim"));
+
+		// Return the clip
+		return clip;
+	} // end method CreateClip
+} // end class MakeAnimations
