@@ -1,0 +1,563 @@
+{\rtf1\ansi\ansicpg1252\deff0\deflang1033{\fonttbl{\f0\fnil\fcharset0 Times New Roman;}{\f1\froman\fcharset0 Times New Roman;}{\f2\fnil\fcharset0 Calibri;}}
+{\colortbl ;\red0\green0\blue0;}
+{\*\generator Msftedit 5.41.21.2510;}\viewkind4\uc1\pard\sl240\slmult1\qc\lang9\b\f0\fs24 Lab Report\par
+Lab 02 - Prefabs and 2D Sprites\par
+Craig Broskow\par
+September 2, 2015\par
+\pard\sl240\slmult1\b0\par
+\par
+\pard\sl480\slmult1\ul Introduction:\par
+\ulnone\tab Custom tools assist game programming teams in multiple ways.  For one thing, they can address the special needs of game developers working on a particular project.  This can save valuable time for the game developers as well as improve their efficiency and morale.  Just as importantly, custom tools can concentrate on common or highly detrimental errors that occur within a game development team.  The prevention of errors before they occur also save time and money, as well as improve morale by eliminating "busy work".\par
+\tab In this lab, we created some tools that add menu items to the Unity editor that improve the efficiency of prefab creation and the automation of 2D sprite animations.  These tools are faster to use and reduce the possibility of errors introduced by manually performing that work.\par
+\par
+\ul Methods:\par
+\ulnone\tab The first menu item added to the Unity editor was "Create Prefab".  This is a fairly simple script that:  (1) Determines which game object(s) the user has selected;  (2) Checks whether the game object(s) already have prefabs created for them;  (3) Confirms with the user if a prefab will be overwritten;  (4) Creates a new prefab and populates it with the game object; and  (5) Deletes the game object(s), replacing them with the new prefab(s).\par
+\tab The second menu item added to the Unity editor was "2D Animations".  This is a slightly more complicated script because it requires data input from the user.  The data input was achieved by creating an Editor window that allows the user to enter several pieces of information regarding the user-selected sprite sheet, such as the number of animation clips it contains, the starting and ending frame numbers of the animation clips and other characteristics of the clips such as whether they loop or pingpong.  Once the data has been entered by the user in the Editor window, an Animator Controller is created, the Animation Clips are added to the Animation Controller, and the parameters of the Animations Clips are set...including keyframes, frame spacing and animation curve.\par
+\tab Finally, we combined the essential parts of both of the initial portions of this lab into a third menu item added to the Unity editor which I called "On Your Own".  This third script duplicates much of the code contained within the first two scripts...primarily due to time constraints.  This tool accomplishes the following tasks for the user:  (1) A user-selected sprite sheet is broken into one or more animation clips, based on data entered by the user;  (2) Additional data validation is performed, specifically to prevent the entry of frame numbers greater than the total number of frames in the sprite sheet;  (3) A sprite is created in the scene view at (0, 0, 0) with an Animation Controller containing the Animation Clips extracted from the specified sprite sheet;  (4) The sprite is used to create a Prefab in the main "Assets" folder; and  (5) The scene view sprite is replaced by the just-created Prefab.\par
+\lang1033\f1\par
+\ul Conclusions:\par
+\ulnone\tab The Unity C# code developed in this lab will certainly be useful in creating similar, and even very different, tools in the future.  Modifying the Editor window to allow users to select objects and then pick custom operations to perform on them opens the door to significant Unity extensions...especially for tool development.  One of the main things learned in this lab was the creation of Editor windows that allow for simple, validated data entry by the user.  The creation and manipulation of prefabs will allow users to create a variety of template objects that will assist game development teams.  The manipulation of 2D animations seems to be primarily limited to 2D games, but perhaps it is more significant than that and I simply don't see a broader usefulness yet.\par
+\par
+\ul Postlab Questions:\par
+\pard\sa39\ulnone 1.  What is the difference between EditorGUI and EditorGUILayout?\par
+\par
+\tab EditorGUILayout allows for the automatic placement of display items, while EditorGUI requires detailed specification of the display layout.\par
+\par
+2.  What is the OnGUI function?\par
+\par
+\tab At least in this lab, the OnGUI function is used to control the display and user interaction with the popup Editor window.  I believe it has other uses in Unity, such as with the legacy GUI system.\par
+\par
+3.  Do variables have to be initialized before they can be used for GUI items?\par
+\par
+\tab No.  The user will generally enter the data to populate the variables for the GUI items.\par
+\par
+4.  Instead of hard-coding the prefabs to go into the asset folder, how could you allow the user to choose what folder to create the prefab?\par
+\par
+\tab Since the path to the folder to store prefabs is simply a string, the popup Editor window could include a text field that would allow the user to specify an existing folder, or a new one to create.\par
+\par
+5.  What is the difference between Instantiate and InstantiatePrefab?\par
+\par
+\tab InstantiatePrefab is used specifically to create game objects from prefabs.  Instantiate, on the other hand, is used to copy game objects to other game objects.\par
+\par
+6.  What are some things you can do with EditorUtility.DisplayDialog?\par
+\par
+\tab EditorUtility.DisplayDialog is very limited in that it can only ask yes/no type questions.  However, it displays the dialog modally...so it can be used to confirm that a user \b really\b0  wants to do what they are requesting.  That would be the most important usage I can see.\par
+\par
+7.  How would you use the utility created in this section?\par
+\par
+\tab At the current time, I do not foresee much work in 2D Unity.  However, the future is very difficult to discern, so I can't say that for sure.  Even so, I don't see working with sprite sheets and the creation of 2D animations to be all that difficult personally...so I would probably continue to do it manually.  If I worked for a company that employed a lot of 2D artists, I can see offering a utility like this for their use.\par
+\par
+8.  Why must you refresh the asset database after creating the prefabs?\par
+\par
+\tab Prefabs are considered to be assets, and \cf1\f0 AssetDatabase.Refresh() updates the Unity project with the new additions.\par
+\par
+\pard\sl480\slmult1\cf0\f1\par
+\lang9\ul\f0 Code:\par
+\pard\sl240\slmult1\lang1033\ulnone\f2\fs20 // MakeAnimations.cs\par
+// Craig Broskow - GAME 221 - Lab 02\par
+\par
+using UnityEngine;\par
+using System.Collections;\par
+using UnityEditor;\par
+\par
+public class MakeAnimations : EditorWindow \{\par
+\par
+\tab // Will hold the object that the user has selected when the script is run\par
+\tab public static Object selectedObject;\par
+\par
+\tab // Will store how many animations will be created\par
+\tab int numAnimations;\par
+\tab // Name of the controller to be created\par
+\tab string controllerName;\par
+\tab // Name of each of the animations to be created\par
+\tab string[] animationNames = new string[100];\par
+\par
+\tab // The frame rate for each animation\par
+\tab float[] clipFrameRate = new float[100];\par
+\tab // The time between each animation\par
+\tab float[] clipTimeBetween = new float[100];\par
+\tab // What frame each animation starts at\par
+\tab int[] startFrames = new int[100];\par
+\tab // What frame each animation ends at\par
+\tab int[] endFrames = new int[100];\par
+\tab // If each animation should pingpong\par
+\tab bool[] pingPong = new bool[100];\par
+\tab // If each animation should loop\par
+\tab bool[] loop = new bool[100];\par
+\par
+\tab [MenuItem("Project Tools/2D Animations")]\par
+\tab static void Init()\par
+\tab\{\par
+\tab\tab // Grab the active object\par
+\tab\tab selectedObject = Selection.activeObject;\par
+\par
+\tab\tab // If the object doesn't exist, do nothing\par
+\tab\tab if (selectedObject == null)\par
+\tab\tab\tab return;\par
+\par
+\tab\tab // Otherwise, create a new window\par
+\tab\tab MakeAnimations window = (MakeAnimations)EditorWindow.GetWindow(typeof(MakeAnimations));\par
+\par
+\tab\tab // Show the window\par
+\tab\tab window.Show();\par
+\tab\} // end method Init\par
+\par
+\tab void OnGUI()\par
+\tab\{\par
+\tab\tab if (selectedObject != null)\par
+\tab\tab\{\par
+\tab\tab\tab // Display the object's name that the animations will be created from\par
+\tab\tab\tab EditorGUILayout.LabelField("Animations for " + selectedObject.name);\par
+\tab\tab\tab // Create a space\par
+\tab\tab\tab EditorGUILayout.Separator();\par
+\tab\tab\tab // Get the name for the animation controller\par
+\tab\tab\tab controllerName = EditorGUILayout.TextField("Controller Name", controllerName);\par
+\tab\tab\tab // Determine how many animations there will be\par
+\tab\tab\tab numAnimations = EditorGUILayout.IntField("How many animations?", numAnimations);\par
+\tab\tab\tab // Loop through each theoretical animation\par
+\tab\tab\tab for (int i = 0; i < numAnimations; i++)\par
+\tab\tab\tab\{\par
+\tab\tab\tab\tab // Determine a name for the animation\par
+\tab\tab\tab\tab animationNames[i] = EditorGUILayout.TextField("Animation Name", animationNames[i]);\par
+\par
+\tab\tab\tab\tab // Start a section where the following items will be displayed horizontally instead of vertically\par
+\tab\tab\tab\tab EditorGUILayout.BeginHorizontal();\par
+\tab\tab\tab\tab // Determine the start frame for the animation\par
+\tab\tab\tab\tab startFrames[i] = EditorGUILayout.IntField("Start Frame", startFrames[i]);\par
+\tab\tab\tab\tab // Determine the end frame for the animation\par
+\tab\tab\tab\tab endFrames[i] = EditorGUILayout.IntField("End Frame", endFrames[i]);\par
+\tab\tab\tab\tab // End the section where the previous items are displayed horizontally instead of vertically\par
+\tab\tab\tab\tab EditorGUILayout.EndHorizontal();\par
+\par
+\tab\tab\tab\tab // Start a section where the following items will be displayed horizontally instead of vertically\par
+\tab\tab\tab\tab EditorGUILayout.BeginHorizontal();\par
+\tab\tab\tab\tab // Determine the frame rate for the animation\par
+\tab\tab\tab\tab clipFrameRate[i] = EditorGUILayout.FloatField("Frame Rate", clipFrameRate[i]);\par
+\tab\tab\tab\tab // Determine the space between each keyframe\par
+\tab\tab\tab\tab clipTimeBetween[i] = EditorGUILayout.FloatField("Frame Spacing", clipTimeBetween[i]);\par
+\tab\tab\tab\tab // End the section where the previous items are displayed horizontally instead of vertically\par
+\tab\tab\tab\tab EditorGUILayout.EndHorizontal();\par
+\tab\tab\tab\tab\par
+\tab\tab\tab\tab // Start a section where the following items will be displayed horizontally instead of vertically\par
+\tab\tab\tab\tab EditorGUILayout.BeginHorizontal();\par
+\tab\tab\tab\tab // Create a checkbox to determine if this animation should loop\par
+\tab\tab\tab\tab loop[i] = EditorGUILayout.Toggle("Loop", loop[i]);\par
+\tab\tab\tab\tab // Create a checkbox to determine if this animation should pingpong\par
+\tab\tab\tab\tab pingPong[i] = EditorGUILayout.Toggle("Ping Pong", pingPong[i]);\par
+\tab\tab\tab\tab // End the section where the previous items are displayed horizontally instead of vertically\par
+\tab\tab\tab\tab EditorGUILayout.EndHorizontal();\par
+\tab\tab\tab\tab // Create a space\par
+\tab\tab\tab\tab EditorGUILayout.Separator();\par
+\tab\tab\tab\} // for (int i = 0; i < numAnimations; i++)\par
+\par
+\tab\tab\tab // Create a button with the label "Create"\par
+\tab\tab\tab if (GUILayout.Button("Create"))\par
+\tab\tab\tab\{\par
+\tab\tab\tab\tab //Create an animator controller\par
+\tab\tab\tab\tab UnityEditor.Animations.AnimatorController controller =\par
+\tab\tab\tab\tab\tab UnityEditor.Animations.AnimatorController.CreateAnimatorControllerAtPath(("Assets/" +\par
+\tab\tab\tab\tab\tab controllerName + ".controller"));\par
+\tab\tab\tab\tab for (int i = 0; i < numAnimations; i++)\par
+\tab\tab\tab\tab\{\par
+\tab\tab\tab\tab\tab // Create animation clip\par
+\tab\tab\tab\tab\tab AnimationClip tempClip = CreateClip(selectedObject, animationNames[i], startFrames[i],\par
+\tab\tab\tab\tab\tab\tab endFrames[i], clipFrameRate[i], clipTimeBetween[i], pingPong[i]);\par
+\par
+\tab\tab\tab\tab\tab // Determine if the clip should loop\par
+\tab\tab\tab\tab\tab if (loop[i])\par
+\tab\tab\tab\tab\tab\{\par
+\tab\tab\tab\tab\tab\tab // If so, capture the settings of the clip\par
+\tab\tab\tab\tab\tab\tab AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(tempClip);\par
+\par
+\tab\tab\tab\tab\tab\tab // Set the looping to true\par
+\tab\tab\tab\tab\tab\tab settings.loopTime = true;\par
+\tab\tab\tab\tab\tab\tab settings.loopBlend = true;\par
+\par
+\tab\tab\tab\tab\tab\tab // Apply the settings to the clip\par
+\tab\tab\tab\tab\tab\tab AnimationUtility.SetAnimationClipSettings(tempClip, settings);\par
+\tab\tab\tab\tab\tab\}\par
+\par
+\tab\tab\tab\tab\tab // Add the clip to the Animator Controller\par
+\tab\tab\tab\tab\tab controller.AddMotion(tempClip);\par
+\tab\tab\tab\tab\}\par
+\tab\tab\tab\}\par
+\tab\tab\}\par
+\tab\} // end method OnGUI\par
+\par
+\tab public AnimationClip CreateClip(Object obj, string clipName, int startFrame, int endFrame,\par
+\tab                                 float frameRate, float timeBetween, bool pingPong)\par
+\tab\{\par
+\tab\tab // Get path to the object\par
+\tab\tab string path = AssetDatabase.GetAssetPath(obj);\par
+\par
+\tab\tab // Extract the sprites\par
+\tab\tab Object[] sprites = AssetDatabase.LoadAllAssetsAtPath(path);\par
+\par
+\tab\tab // Determine how many frames, and the length of each frame\par
+\tab\tab int frameCount = endFrame - startFrame + 1;\par
+\tab\tab float frameLength = 1f / timeBetween;\par
+\par
+\tab\tab // Create a new (empty) animation clip\par
+\tab\tab AnimationClip clip = new AnimationClip();\par
+\par
+\tab\tab // Set the framerate for the clip\par
+\tab\tab clip.frameRate = frameRate;\par
+\par
+\tab\tab // Create the new (empty) curve binding\par
+\tab\tab EditorCurveBinding curveBinding = new EditorCurveBinding();\par
+\tab\tab // Assign it to change the sprite renderer\par
+\tab\tab curveBinding.type = typeof(SpriteRenderer);\par
+\tab\tab // Assign it to alter the sprite of the sprite renderer\par
+\tab\tab curveBinding.propertyName = "m_Sprite";\par
+\par
+\tab\tab // Create a container for all of the keyframes\par
+\tab\tab ObjectReferenceKeyframe[] keyFrames;\par
+\par
+\tab\tab // Determine how many frames there will be if we are or are not pingponging\par
+\tab\tab if (!pingPong)\par
+\tab\tab\tab keyFrames = new ObjectReferenceKeyframe[frameCount + 1];\par
+\tab\tab else\par
+\tab\tab\tab keyFrames = new ObjectReferenceKeyframe[frameCount * 2 + 1];\par
+\par
+\tab\tab // Keep track of what frame number we are on\par
+\tab\tab int frameNumber = 0;\par
+\par
+\tab\tab // Loop from start to end, incrementing frameNumber as we go\par
+\tab\tab for (int i = startFrame; i < endFrame + 1; i++, frameNumber++)\par
+\tab\tab\{\par
+\tab\tab\tab // Create an empty keyframe\par
+\tab\tab\tab ObjectReferenceKeyframe tempKeyFrame = new ObjectReferenceKeyframe();\par
+\tab\tab\tab // Assign it a time to appear in the animation\par
+\tab\tab\tab tempKeyFrame.time = frameNumber * frameLength;\par
+\tab\tab\tab // Assign it to a sprite\par
+\tab\tab\tab tempKeyFrame.value = sprites[i];\par
+\tab\tab\tab // Place it into the container for all the keyframes\par
+\tab\tab\tab keyFrames[frameNumber] = tempKeyFrame;\par
+\tab\tab\}\par
+\par
+\tab\tab // If we are pingponging this animation\par
+\tab\tab if (pingPong)\par
+\tab\tab\{\par
+\tab\tab\tab // Create keyframes starting at the end and going backwards\par
+\tab\tab\tab // Continue to keep track of the frame number\par
+\tab\tab\tab for (int i = endFrame; i >= startFrame; i--, frameNumber++)\par
+\tab\tab\tab\{\par
+\tab\tab\tab\tab ObjectReferenceKeyframe tempKeyFrame = new ObjectReferenceKeyframe();\par
+\tab\tab\tab\tab tempKeyFrame.time = frameNumber * frameLength;\par
+\tab\tab\tab\tab tempKeyFrame.value = sprites[i];\par
+\tab\tab\tab\tab keyFrames[frameNumber] = tempKeyFrame;\par
+\tab\tab\tab\}\par
+\tab\tab\}\par
+\par
+\tab\tab // Create the last sprite to stop it from switching quickly from the last frame to the first one\par
+\tab\tab ObjectReferenceKeyframe lastSprite = new ObjectReferenceKeyframe();\par
+\tab\tab lastSprite.time = frameNumber * frameLength;\par
+\tab\tab lastSprite.value = sprites[startFrame];\par
+\tab\tab keyFrames[frameNumber] = lastSprite;\par
+\par
+\tab\tab // Assign the name\par
+\tab\tab clip.name = clipName;\par
+\par
+\tab\tab // Apply the curve\par
+\tab\tab AnimationUtility.SetObjectReferenceCurve(clip, curveBinding, keyFrames);\par
+\par
+\tab\tab // Create the clip\par
+\tab\tab AssetDatabase.CreateAsset(clip, ("Assets/" + clipName + ".anim"));\par
+\par
+\tab\tab // Return the clip\par
+\tab\tab return clip;\par
+\tab\} // end method CreateClip\par
+\} // end class MakeAnimations\par
+\par
+\par
+\par
+\par
+// MakePrefabs.cs\par
+// Craig Broskow - GAME 221 - Lab 02\par
+\par
+using UnityEngine;\par
+using System.Collections;\par
+using UnityEditor;\par
+\par
+public class MakePrefabs : MonoBehaviour \{\par
+\par
+\tab [MenuItem("Project Tools/Create Prefab")]\par
+\tab public static void CreatePrefab()\par
+\tab\{\par
+\tab\tab GameObject[] selectedObjects = Selection.gameObjects;\par
+\par
+\tab\tab foreach(GameObject go in selectedObjects)\par
+\tab\tab\{\par
+\tab\tab\tab string name = go.name;\par
+\tab\tab\tab string assetPath = "Assets/" + name + ".prefab";\par
+\par
+\tab\tab\tab if (AssetDatabase.LoadAssetAtPath(assetPath, typeof(GameObject)))\par
+\tab\tab\tab\{\par
+//\tab\tab\tab\tab Debug.Log("Asset exists!");\par
+\tab\tab\tab\tab if (EditorUtility.DisplayDialog("Caution", "Prefab already exists.  " +\par
+\tab\tab\tab\tab                                 "Do you want to overwrite?", "Yes", "No"))\par
+\tab\tab\tab\tab\{\par
+\tab\tab\tab\tab\tab CreateNew(go, assetPath);\par
+\tab\tab\tab\tab\}\par
+\tab\tab\tab\}\par
+\tab\tab\tab else\par
+\tab\tab\tab\{\par
+\tab\tab\tab\tab CreateNew(go, assetPath);\par
+\tab\tab\tab\}\par
+\tab\tab\}\par
+\tab\} // end method CreatePrefab\par
+\par
+\tab public static void CreateNew(GameObject obj, string location)\par
+\tab\{\par
+\tab\tab Object prefab = PrefabUtility.CreateEmptyPrefab(location);\par
+\tab\tab PrefabUtility.ReplacePrefab(obj, prefab);\par
+\tab\tab AssetDatabase.Refresh();\par
+\par
+\tab\tab DestroyImmediate(obj);\par
+\tab\tab GameObject clone = PrefabUtility.InstantiatePrefab(prefab) as GameObject;\par
+\tab\} // end method CreateNew\par
+\} // end class MakePrefabs\par
+\par
+\par
+\par
+\par
+\par
+// OnYourOwn.cs\par
+// Craig Broskow - GAME 221 - Lab 02\par
+\par
+using UnityEngine;\par
+using System.Collections;\par
+using UnityEditor;\par
+\par
+public class OnYourOwn : EditorWindow \{\par
+\tab\par
+\tab // Will hold the object that the user has selected when the script is run\par
+\tab public static Object selectedObject;\par
+\tab\par
+\tab // Will store how many animations will be created\par
+\tab int numAnimations;\par
+\tab // Name of the controller to be created\par
+\tab string controllerName;\par
+\tab // Name of each of the animations to be created\par
+\tab string[] animationNames = new string[100];\par
+\tab\par
+\tab // The frame rate for each animation\par
+\tab float[] clipFrameRate = new float[100];\par
+\tab // The time between each animation\par
+\tab float[] clipTimeBetween = new float[100];\par
+\tab // What frame each animation starts at\par
+\tab int[] startFrames = new int[100];\par
+\tab // What frame each animation ends at\par
+\tab int[] endFrames = new int[100];\par
+\tab // If each animation should pingpong\par
+\tab bool[] pingPong = new bool[100];\par
+\tab // If each animation should loop\par
+\tab bool[] loop = new bool[100];\par
+\tab\par
+\tab [MenuItem("Project Tools/On Your Own")]\par
+\tab static void Init()\par
+\tab\{\par
+\tab\tab // Grab the active object\par
+\tab\tab selectedObject = Selection.activeObject;\par
+\tab\tab\par
+\tab\tab // If the object doesn't exist, do nothing\par
+\tab\tab if (selectedObject == null)\par
+\tab\tab\tab return;\par
+\tab\tab\par
+\tab\tab // Otherwise, create a new window\par
+\tab\tab OnYourOwn window = (OnYourOwn)EditorWindow.GetWindow(typeof(OnYourOwn));\par
+\tab\tab\par
+\tab\tab // Show the window\par
+\tab\tab window.Show();\par
+\tab\} // end method Init\par
+\tab\par
+\tab void OnGUI()\par
+\tab\{\par
+\tab\tab if (selectedObject != null)\par
+\tab\tab\{\par
+\tab\tab\tab // Determine the maximum frame number in the sprite sheet.\par
+\tab\tab\tab int maxFrameNumber =\par
+\tab\tab\tab\tab AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(selectedObject)).GetUpperBound(0);\par
+\tab\tab\tab // Display the object's name that the animations will be created from\par
+\tab\tab\tab EditorGUILayout.LabelField("Animations for " + selectedObject.name);\par
+\tab\tab\tab // Create a space\par
+\tab\tab\tab EditorGUILayout.Separator();\par
+\tab\tab\tab // Get the name for the animation controller\par
+\tab\tab\tab controllerName = EditorGUILayout.TextField("Controller Name", controllerName);\par
+\tab\tab\tab // Determine how many animations there will be\par
+\tab\tab\tab numAnimations = EditorGUILayout.IntField("How many animations?", numAnimations);\par
+\tab\tab\tab // Loop through each theoretical animation\par
+\tab\tab\tab for (int i = 0; i < numAnimations; i++)\par
+\tab\tab\tab\{\par
+\tab\tab\tab\tab // Determine a name for the animation\par
+\tab\tab\tab\tab animationNames[i] = EditorGUILayout.TextField("Animation Name", animationNames[i]);\par
+\tab\tab\tab\tab\par
+\tab\tab\tab\tab // Start a section where the following items will be displayed horizontally instead of vertically\par
+\tab\tab\tab\tab EditorGUILayout.BeginHorizontal();\par
+\tab\tab\tab\tab // Determine the start frame for the animation\par
+\tab\tab\tab\tab startFrames[i] = EditorGUILayout.IntField("Start Frame", startFrames[i]);\par
+\tab\tab\tab\tab // Determine the end frame for the animation\par
+\tab\tab\tab\tab endFrames[i] = EditorGUILayout.IntField("End Frame", endFrames[i]);\par
+\tab\tab\tab\tab // Limit the end frame number to the number of frames in the sprite sheet.\par
+\tab\tab\tab\tab if (endFrames[i] > maxFrameNumber)\par
+\tab\tab\tab\tab\tab endFrames[i] = maxFrameNumber;\par
+\tab\tab\tab\tab // End the section where the previous items are displayed horizontally instead of vertically\par
+\tab\tab\tab\tab EditorGUILayout.EndHorizontal();\par
+\tab\tab\tab\tab\par
+\tab\tab\tab\tab // Start a section where the following items will be displayed horizontally instead of vertically\par
+\tab\tab\tab\tab EditorGUILayout.BeginHorizontal();\par
+\tab\tab\tab\tab // Determine the frame rate for the animation\par
+\tab\tab\tab\tab clipFrameRate[i] = EditorGUILayout.FloatField("Frame Rate", clipFrameRate[i]);\par
+\tab\tab\tab\tab // Determine the space between each keyframe\par
+\tab\tab\tab\tab clipTimeBetween[i] = EditorGUILayout.FloatField("Frame Spacing", clipTimeBetween[i]);\par
+\tab\tab\tab\tab // End the section where the previous items are displayed horizontally instead of vertically\par
+\tab\tab\tab\tab EditorGUILayout.EndHorizontal();\par
+\tab\tab\tab\tab\par
+\tab\tab\tab\tab // Start a section where the following items will be displayed horizontally instead of vertically\par
+\tab\tab\tab\tab EditorGUILayout.BeginHorizontal();\par
+\tab\tab\tab\tab // Create a checkbox to determine if this animation should loop\par
+\tab\tab\tab\tab loop[i] = EditorGUILayout.Toggle("Loop", loop[i]);\par
+\tab\tab\tab\tab // Create a checkbox to determine if this animation should pingpong\par
+\tab\tab\tab\tab pingPong[i] = EditorGUILayout.Toggle("Ping Pong", pingPong[i]);\par
+\tab\tab\tab\tab // End the section where the previous items are displayed horizontally instead of vertically\par
+\tab\tab\tab\tab EditorGUILayout.EndHorizontal();\par
+\tab\tab\tab\tab // Create a space\par
+\tab\tab\tab\tab EditorGUILayout.Separator();\par
+\tab\tab\tab\} // for (int i = 0; i < numAnimations; i++)\par
+\tab\tab\tab\par
+\tab\tab\tab // Create a button with the label "Create"\par
+\tab\tab\tab if (GUILayout.Button("Create"))\par
+\tab\tab\tab\{\par
+\tab\tab\tab\tab //Create an animator controller\par
+\tab\tab\tab\tab UnityEditor.Animations.AnimatorController controller =\par
+\tab\tab\tab\tab\tab UnityEditor.Animations.AnimatorController.CreateAnimatorControllerAtPath(("Assets/" +\par
+\tab\tab\tab\tab\tab                                                                           controllerName + ".controller"));\par
+\tab\tab\tab\tab for (int i = 0; i < numAnimations; i++)\par
+\tab\tab\tab\tab\{\par
+\tab\tab\tab\tab\tab // Create animation clip\par
+\tab\tab\tab\tab\tab AnimationClip tempClip = CreateClip(selectedObject, animationNames[i], startFrames[i],\par
+\tab\tab\tab\tab\tab                                     endFrames[i], clipFrameRate[i], clipTimeBetween[i], pingPong[i]);\par
+\tab\tab\tab\tab\tab\par
+\tab\tab\tab\tab\tab // Determine if the clip should loop\par
+\tab\tab\tab\tab\tab if (loop[i])\par
+\tab\tab\tab\tab\tab\{\par
+\tab\tab\tab\tab\tab\tab // If so, capture the settings of the clip\par
+\tab\tab\tab\tab\tab\tab AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(tempClip);\par
+\tab\tab\tab\tab\tab\tab\par
+\tab\tab\tab\tab\tab\tab // Set the looping to true\par
+\tab\tab\tab\tab\tab\tab settings.loopTime = true;\par
+\tab\tab\tab\tab\tab\tab settings.loopBlend = true;\par
+\tab\tab\tab\tab\tab\tab\par
+\tab\tab\tab\tab\tab\tab // Apply the settings to the clip\par
+\tab\tab\tab\tab\tab\tab AnimationUtility.SetAnimationClipSettings(tempClip, settings);\par
+\tab\tab\tab\tab\tab\}\par
+\tab\tab\tab\tab\tab\par
+\tab\tab\tab\tab\tab // Add the clip to the Animator Controller\par
+\tab\tab\tab\tab\tab controller.AddMotion(tempClip);\par
+\tab\tab\tab\tab\}\par
+\par
+\tab\tab\tab\tab // Create a sprite in the scene view at (0,0,0) with the new animation controller.\par
+\tab\tab\tab\tab GameObject newSprite = new GameObject();\par
+\tab\tab\tab\tab newSprite.transform.position = Vector3.zero;\par
+\tab\tab\tab\tab newSprite.name = controllerName + "Sprite";\par
+\tab\tab\tab\tab newSprite.AddComponent<SpriteRenderer>();\par
+\tab\tab\tab\tab newSprite.AddComponent<Animator>();\par
+\tab\tab\tab\tab newSprite.GetComponent<Animator>().runtimeAnimatorController = controller;\par
+\par
+\tab\tab\tab\tab // Make the sprite a prefab in the main "Assets" folder.\par
+\tab\tab\tab\tab Object prefab = PrefabUtility.CreateEmptyPrefab("Assets/" + controllerName + "Sprite.prefab");\par
+\tab\tab\tab\tab PrefabUtility.ReplacePrefab(newSprite, prefab);\par
+\tab\tab\tab\tab AssetDatabase.Refresh();\par
+\tab\tab\tab\tab DestroyImmediate(newSprite);\par
+\tab\tab\tab\tab GameObject clone = PrefabUtility.InstantiatePrefab(prefab) as GameObject;\par
+\tab\tab\tab\} // if (GUILayout.Button("Create"))\par
+\tab\tab\}\par
+\tab\} // end method OnGUI\par
+\tab\par
+\tab public AnimationClip CreateClip(Object obj, string clipName, int startFrame, int endFrame,\par
+\tab                                 float frameRate, float timeBetween, bool pingPong)\par
+\tab\{\par
+\tab\tab // Get path to the object\par
+\tab\tab string path = AssetDatabase.GetAssetPath(obj);\par
+\tab\tab\par
+\tab\tab // Extract the sprites\par
+\tab\tab Object[] sprites = AssetDatabase.LoadAllAssetsAtPath(path);\par
+\tab\tab\par
+\tab\tab // Determine how many frames, and the length of each frame\par
+\tab\tab int frameCount = endFrame - startFrame + 1;\par
+\tab\tab float frameLength = 1f / timeBetween;\par
+\tab\tab\par
+\tab\tab // Create a new (empty) animation clip\par
+\tab\tab AnimationClip clip = new AnimationClip();\par
+\tab\tab\par
+\tab\tab // Set the framerate for the clip\par
+\tab\tab clip.frameRate = frameRate;\par
+\tab\tab\par
+\tab\tab // Create the new (empty) curve binding\par
+\tab\tab EditorCurveBinding curveBinding = new EditorCurveBinding();\par
+\tab\tab // Assign it to change the sprite renderer\par
+\tab\tab curveBinding.type = typeof(SpriteRenderer);\par
+\tab\tab // Assign it to alter the sprite of the sprite renderer\par
+\tab\tab curveBinding.propertyName = "m_Sprite";\par
+\tab\tab\par
+\tab\tab // Create a container for all of the keyframes\par
+\tab\tab ObjectReferenceKeyframe[] keyFrames;\par
+\tab\tab\par
+\tab\tab // Determine how many frames there will be if we are or are not pingponging\par
+\tab\tab if (!pingPong)\par
+\tab\tab\tab keyFrames = new ObjectReferenceKeyframe[frameCount + 1];\par
+\tab\tab else\par
+\tab\tab\tab keyFrames = new ObjectReferenceKeyframe[frameCount * 2 + 1];\par
+\tab\tab\par
+\tab\tab // Keep track of what frame number we are on\par
+\tab\tab int frameNumber = 0;\par
+\tab\tab\par
+\tab\tab // Loop from start to end, incrementing frameNumber as we go\par
+\tab\tab for (int i = startFrame; i < endFrame + 1; i++, frameNumber++)\par
+\tab\tab\{\par
+\tab\tab\tab // Create an empty keyframe\par
+\tab\tab\tab ObjectReferenceKeyframe tempKeyFrame = new ObjectReferenceKeyframe();\par
+\tab\tab\tab // Assign it a time to appear in the animation\par
+\tab\tab\tab tempKeyFrame.time = frameNumber * frameLength;\par
+\tab\tab\tab // Assign it to a sprite\par
+\tab\tab\tab tempKeyFrame.value = sprites[i];\par
+\tab\tab\tab // Place it into the container for all the keyframes\par
+\tab\tab\tab keyFrames[frameNumber] = tempKeyFrame;\par
+\tab\tab\}\par
+\tab\tab\par
+\tab\tab // If we are pingponging this animation\par
+\tab\tab if (pingPong)\par
+\tab\tab\{\par
+\tab\tab\tab // Create keyframes starting at the end and going backwards\par
+\tab\tab\tab // Continue to keep track of the frame number\par
+\tab\tab\tab for (int i = endFrame; i >= startFrame; i--, frameNumber++)\par
+\tab\tab\tab\{\par
+\tab\tab\tab\tab ObjectReferenceKeyframe tempKeyFrame = new ObjectReferenceKeyframe();\par
+\tab\tab\tab\tab tempKeyFrame.time = frameNumber * frameLength;\par
+\tab\tab\tab\tab tempKeyFrame.value = sprites[i];\par
+\tab\tab\tab\tab keyFrames[frameNumber] = tempKeyFrame;\par
+\tab\tab\tab\}\par
+\tab\tab\}\par
+\tab\tab\par
+\tab\tab // Create the last sprite to stop it from switching quickly from the last frame to the first one\par
+\tab\tab ObjectReferenceKeyframe lastSprite = new ObjectReferenceKeyframe();\par
+\tab\tab lastSprite.time = frameNumber * frameLength;\par
+\tab\tab lastSprite.value = sprites[startFrame];\par
+\tab\tab keyFrames[frameNumber] = lastSprite;\par
+\tab\tab\par
+\tab\tab // Assign the name\par
+\tab\tab clip.name = clipName;\par
+\tab\tab\par
+\tab\tab // Apply the curve\par
+\tab\tab AnimationUtility.SetObjectReferenceCurve(clip, curveBinding, keyFrames);\par
+\tab\tab\par
+\tab\tab // Create the clip\par
+\tab\tab AssetDatabase.CreateAsset(clip, ("Assets/" + clipName + ".anim"));\par
+\tab\tab\par
+\tab\tab // Return the clip\par
+\tab\tab return clip;\par
+\tab\} // end method CreateClip\par
+\} // end class OnYourOwn\par
+\par
+}
+ 
