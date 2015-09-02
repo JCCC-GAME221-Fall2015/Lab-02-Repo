@@ -8,7 +8,7 @@ public class PrefabGenerator : MonoBehaviour
     public static void CreatePrefab()
     {
         GameObject[] selected = Selection.gameObjects;
-        foreach(GameObject obj in selected)
+        foreach (GameObject obj in selected)
         {
             string name = obj.name;
             string assetPath = "Assets/" + name + ".prefab";
@@ -40,6 +40,6 @@ public class PrefabGenerator : MonoBehaviour
 
         // Destroy the original GameObject
         DestroyImmediate(obj);
-        GameObject clone = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+        // GameObject clone = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
     }
 }
