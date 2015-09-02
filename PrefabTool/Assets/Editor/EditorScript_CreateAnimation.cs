@@ -2,6 +2,10 @@
 using System.Collections;
 using UnityEditor;
 
+/// <summary>
+/// @Author Marshall Mason
+/// Editor script_ create animation.
+/// </summary>
 public class EditorScript_CreateAnimation : EditorWindow
 {
     public static Object selectedObject;

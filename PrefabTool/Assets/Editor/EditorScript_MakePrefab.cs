@@ -2,6 +2,10 @@
 using System.Collections;
 using UnityEditor;
 
+/// <summary>
+/// @Author Marshall Mason
+/// Editor script_ make prefab.
+/// </summary>
 public class EditorScript_MakePrefab : MonoBehaviour {
 	[MenuItem("Project Tools/Create Prefab")]
 	public static void MakePrefab()
