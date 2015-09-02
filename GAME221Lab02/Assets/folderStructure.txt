@@ -1,0 +1,7 @@
+Assets: This folder is for storing assets.
+There are four main categories
+
+	Dynamic Resources
+	Shaders
+	Static Resources
+	and Testing.

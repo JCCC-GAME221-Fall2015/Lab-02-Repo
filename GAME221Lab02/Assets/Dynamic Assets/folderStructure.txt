@@ -1,0 +1,9 @@
+Dynamic Assets: This folder is for storing dynamic assets.
+These are stored as such
+
+	Dynamic Resources
+	Editor
+	Extensions
+	Gizmos
+	Plugins
+	and Scripts

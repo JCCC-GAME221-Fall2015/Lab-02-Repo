@@ -1,0 +1,1 @@
+Plugins: This folder is for storing plugins.

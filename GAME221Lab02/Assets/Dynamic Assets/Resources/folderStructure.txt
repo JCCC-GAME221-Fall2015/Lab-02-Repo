@@ -1,0 +1,9 @@
+Resources: This folder is for storing dynamic Resources including
+
+	Animations
+	Animation Controllers
+	Effects
+	Models for Characters and Environments
+	Prefabs
+	Sounds for Music and SFX
+	and Textures

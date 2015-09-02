@@ -1,0 +1,3 @@
+Gizmos: This folder is for storing nice mogwais.
+
+All others need to be placed in the round file after exposure to sunlight.

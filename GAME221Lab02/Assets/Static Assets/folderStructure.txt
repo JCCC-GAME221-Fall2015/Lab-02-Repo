@@ -1,0 +1,10 @@
+Static Assets: This folder is for storing Static Assets including
+
+	Animations
+	Animation Controllers
+	Effects
+	Models for Characters and Environments
+	Prefabs
+	Scenes
+	Sounds for Music and SFX
+	and Textures
