@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿// MakePrefabs.cs
+// Craig Broskow - GAME 221 - Lab 02
+
+using UnityEngine;
 using System.Collections;
 using UnityEditor;
 
