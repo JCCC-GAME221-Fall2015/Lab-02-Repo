@@ -27,7 +27,6 @@ public class ScriptToolMakePrefab : MonoBehaviour {
             }
             else
             {
-                Debug.Log("Asset does not exist!");
                 CreateNew(go, assetPath);
             }
 
