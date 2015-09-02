@@ -1,0 +1,1 @@
+This folder is for storing Resources in the static assets folder
