@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2015
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityVS.Lab-02-gipson.CSharp", "UnityVS.Lab-02-gipson.CSharp.csproj", "{EB21107C-B8E0-1D33-6B1A-5B341F15436A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityVS.Lab-02-gipson.CSharp.Editor", "UnityVS.Lab-02-gipson.CSharp.Editor.csproj", "{3CBF4E79-4264-4481-0DAA-5DBB3F5A02BC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EB21107C-B8E0-1D33-6B1A-5B341F15436A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB21107C-B8E0-1D33-6B1A-5B341F15436A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB21107C-B8E0-1D33-6B1A-5B341F15436A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB21107C-B8E0-1D33-6B1A-5B341F15436A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3CBF4E79-4264-4481-0DAA-5DBB3F5A02BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3CBF4E79-4264-4481-0DAA-5DBB3F5A02BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3CBF4E79-4264-4481-0DAA-5DBB3F5A02BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3CBF4E79-4264-4481-0DAA-5DBB3F5A02BC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
